@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Never commit keys, election data or demo output
+*.key
+*.pem
+/authority/
+/server/
+/demo_run/
+receipt-*.json
+board_copy.json
+enrolment_codes.txt

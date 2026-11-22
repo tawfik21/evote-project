@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "evote"
+version = "1.0.0"
+description = "Secure e-voting prototype with verifiable ballots and zero-knowledge proofs (MACS902)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "cryptography>=44",   # Ed25519, Argon2id, AES-GCM, X.509 (OpenSSL backend)
+    "pynacl>=1.5",        # libsodium Edwards25519 group operations for ElGamal + ZKPs
+    "flask>=3.0",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "bandit>=1.7", "pip-audit>=2.7"]
+
+[project.scripts]
+evote = "evote.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["evote*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

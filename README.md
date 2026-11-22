@@ -37,7 +37,7 @@ evote --help
 
 This runs the authority, starts the HTTPS server, enrols 4 voters, casts 3 honest ballots and runs 7 attacks. It then closes the election, tallies it and audits everything. The demo files go in `demo_run/`.
 
-## 3. Run it by hand (for the live presentation)
+## 3. Run it by hand 
 
 Open four terminals in the project folder (with the venv activated). Every passphrase is **prompted for and hidden**.
 
@@ -78,75 +78,6 @@ evote audit            --trust server/trust.json # detects it
 
 Open `https://localhost:8443/` in a browser to see the public board. The browser will warn that the certificate is self-signed; that is expected, because only the CLI pins it.
 
----
-
-## 4. Deploying the server
-
-The server is one process: `evote server run`. It serves HTTPS (TLS 1.3 only) using the certificate made by `evote server init`. **The certificate must list the name or IP address voters will use**, so choose these at `init` time.
-
-### A. Everything on one laptop (simplest; good for the demo)
-Use the defaults, as in section 3: `https://localhost:8443`.
-
-### B. Server on one laptop, voters on other laptops (same Wi-Fi / LAN)
-On the server laptop, find its LAN IP (`ip addr`, `ipconfig` or `ifconfig`), for example `192.168.1.50`:
-```bash
-evote server init --data-dir server --package authority/election_package.json \
-      --url https://192.168.1.50:8443 --ip 192.168.1.50 --ip 127.0.0.1 --hostname localhost
-evote server run --data-dir server --host 0.0.0.0 --port 8443
-```
-Then:
-- Allow TCP port 8443 through the firewall (`sudo ufw allow 8443/tcp` on Ubuntu; on Windows, accept the Defender prompt).
-- Copy `server/trust.json` to each voter's laptop (USB stick, email or the group chat; it contains no secrets).
-- Voters run the same `evote voter ...` commands with `--trust trust.json`.
-
-> University Wi-Fi often blocks connections between devices. If it does, use a phone hotspot.
-
-### C. Cloud virtual machine (e.g. AWS EC2, Azure or DigitalOcean, Ubuntu 24.04)
-1. Create the VM and open inbound **TCP 8443** in its security group or firewall. Note its public IP or DNS name.
-2. On the VM:
-   ```bash
-   sudo apt update && sudo apt install -y python3-venv git
-   git clone <your-repo-url> evote && cd evote
-   python3 -m venv .venv && source .venv/bin/activate && pip install -e .
-   ```
-3. Copy **only** `election_package.json` to the VM. **The authority key never goes to the server.**
-   ```bash
-   scp authority/election_package.json ubuntu@<VM-IP>:evote/
-   ```
-4. Initialise for the public address, then run:
-   ```bash
-   evote server init --data-dir server --package election_package.json \
-         --url https://<VM-IP>:8443 --ip <VM-IP>          # or --hostname vote.example.com
-   evote server run --data-dir server --host 0.0.0.0 --port 8443
-   ```
-5. To keep it running after you log out, use a systemd service. Create `/etc/systemd/system/evote.service`:
-   ```ini
-   [Unit]
-   Description=evote ballot server
-   After=network.target
-
-   [Service]
-   User=ubuntu
-   WorkingDirectory=/home/ubuntu/evote
-   # The server passphrase is supplied via a root-only environment file (chmod 600).
-   EnvironmentFile=/etc/evote/passphrase.env
-   ExecStart=/home/ubuntu/evote/.venv/bin/evote server run --data-dir server --host 0.0.0.0 --port 8443 --passphrase-env EVOTE_SERVER_PASS
-   Restart=on-failure
-
-   [Install]
-   WantedBy=multi-user.target
-   ```
-   `/etc/evote/passphrase.env` contains `EVOTE_SERVER_PASS=...`. Then:
-   ```bash
-   sudo systemctl daemon-reload && sudo systemctl enable --now evote
-   ```
-6. Download `server/trust.json` from the VM and give it to voters.
-
-**Production notes** (worth discussing in the report):
-- The built-in server is Werkzeug, which is fine for a prototype. In production, run the app under a WSGI server such as gunicorn. Use **one worker** with several threads, because board appends rely on an in-process lock plus SQLite transactions. Put it behind a reverse proxy or load balancer.
-- Use a certificate from a real CA (e.g. Let's Encrypt), and pin its public key in `trust.json`.
-
----
 
 ## 5. Tests and checks
 

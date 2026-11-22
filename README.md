@@ -120,4 +120,4 @@ docs/DESIGN.md          design notes for the technical report
 
 ## Academic integrity
 
-As the MACS902 guidelines require, the use of AI tools must be cited. Parts of this code and documentation were developed with the assistance of Claude (Anthropic). The cryptographic constructions follow the published papers listed in `docs/DESIGN.md`.
+As the MACS902 guidelines require, the use of AI tools must be cited. Parts of this code and documentation were developed with the assistance of Claude (Anthropic)
